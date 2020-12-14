@@ -376,6 +376,7 @@ WriteToLogFile
 		NULL,
 		&ioStatusBlock,
 		writeBuffer,
+		#pragma warning(suppress: 4267)
 		strlen(writeBuffer),
 		&ByteOffset,
 		NULL);
