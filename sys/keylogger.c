@@ -13,7 +13,7 @@ ULONG				written;		// Total number of records written to the file.
 
 #define				LOG_TRIGGER_POINT 16	// Value at which the writing work item fires.
 
-#define				SZ_KEYTABLE 0x53	// Size of the scancodes table.
+#define				SZ_KEYTABLE 0x59	// Size of the scancodes table.
 
 char* keytable[SZ_KEYTABLE] =				// Scancodes table.
 {
@@ -32,7 +32,7 @@ char* keytable[SZ_KEYTABLE] =				// Scancodes table.
 	"-",
 	"=",
 	"[BACKSPACE]",
-	"[INVALID]",
+	"[TAB]",
 	"q",
 	"w",
 	"e",
@@ -75,31 +75,37 @@ char* keytable[SZ_KEYTABLE] =				// Scancodes table.
 	"[INVALID]",
 	"[ALT]",
 	"[SPACE]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
-	"[INVALID]",
+	"[CAPSLOCK]",
+	"[F1]",
+	"[F2]",
+	"[F3]",
+	"[F4]",
+	"[F5]",
+	"[F6]",
+	"[F7]",
+	"[F8]",
+	"[F9]",
+	"[F10]",
+	"[NUMLOCK]",
+	"[SCROLLLOCK]",
 	"7",
 	"8",
 	"9",
-	"[INVALID]",
+	"-",
 	"4",
 	"5",
 	"6",
-	"[INVALID]",
+	"+",
 	"1",
 	"2",
 	"3",
-	"0"
+	"0",
+	".",
+	"[ALT-SYSRQ]",
+	"[INVALID]",
+	"[INVALID]",
+	"[F11]",
+	"[F12]"
 };
 
 
