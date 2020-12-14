@@ -33,4 +33,4 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: keylogger-windows-${{matrix.platform}}-${{env.BUILD_CONFIGURATION}}
-        path: D:\a\kmdf-keylogger\kmdf-keylogger\sys\Release\keylogger\
+        path: sys\Release\keylogger\
