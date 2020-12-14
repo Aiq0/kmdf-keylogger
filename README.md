@@ -1,8 +1,9 @@
-
+![MSBuild](https://github.com/Aiq0/kmdf-keylogger/workflows/MSBuild/badge.svg?event=push)
 # KeyLogger
+This in only a fork of original [repository](https://github.com/adapiekarska/kmdf-keylogger) by [Adrianna Piekarska](https://github.com/adapiekarska) which contains some changes like setup automatic GitHub Workflow with artifacts and source code tweaks.
 
 ## Description
-Simple Key Logger KMDF Driver.
+Simple Key Logger KMDF Driver. 
 
 ## Author
 Adrianna Piekarska
