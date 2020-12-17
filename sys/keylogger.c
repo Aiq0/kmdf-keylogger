@@ -78,7 +78,7 @@ char* keytable[SZ_KEYTABLE] =				// Scancodes table.
 	".",
 	"/",
 	"[RSHIFT]",
-	"[INVALID]",
+	"*",
 	"[ALT]",
 	"[SPACE]",
 	"[CAPSLOCK]",
