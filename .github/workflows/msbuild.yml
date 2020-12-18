@@ -30,9 +30,9 @@ jobs:
       # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{matrix.platform}} ${{env.SOLUTION_FILE_PATH}} 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: keylogger-windows-${{matrix.platform}}-${{env.BUILD_CONFIGURATION}}
         path: |
-          sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger
+          sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger\
           sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger.cer
