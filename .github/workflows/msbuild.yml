@@ -33,4 +33,6 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: keylogger-windows-${{matrix.platform}}-${{env.BUILD_CONFIGURATION}}
-        path: sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger\
+        path: |
+          sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger\
+          sys\${{matrix.platform == 'x64' && 'x64\' || ''}}Release\keylogger.cer
